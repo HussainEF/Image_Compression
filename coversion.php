@@ -1,65 +1,80 @@
 <?php
     if(isset($_POST['convert'])){
-        $dirpath=$_POST['name'];
-        
-        $output_path="compressed/";
-        foreach( $_FILES['file']['tmp_name'] as $key => $tmp_name ){
-            $image_tmp_name =  $_FILES['file']['tmp_name'][$key];
-            $image_name =  $_FILES['file']['name'][$key];
-            echo "$image_name"."<br><br>";
-            $image_extenstion=strtolower(pathinfo($_FILES['file']['name'][$key], PATHINFO_EXTENSION));
-            $extenstions_allowed = array('gif', 'png', 'jpg');
-            if(in_array($image_extenstion, $extenstions_allowed)){
-                $mime_type = mime_content_type($image_tmp_name);
-                // image_compression($image_tmp_name, $image_name, $output_path, $image_quality);
-                switch(strtolower(($mime_type)))
-                {
-                    case 'image/jpeg':
-                        $new_image = imagecreatefromjpeg($image_tmp_name);
-                        if($new_image !== false){
-                            $image_quality=60; 
-                            $compressed_image_name = $output_path. basename($image_name);
-                            imagejpeg($new_image, $compressed_image_name, $image_quality);
-                            imagedestroy($new_image);
-                            echo $image_name ." Compressed Successfully"."<br>";
-                        }else {
-                                echo $image_name." Compressing Failed"."<br>";
-                        }
-                        break;
+        $dirpath=$_POST['path'];
+        dir_scan($dirpath);
+    } 
 
-                    case 'image/png':
-                        $image_quality=8;
-                        $new_image = imagecreatefrompng($image_tmp_name);
-                        if($new_image !== false){
-                            $compressed_image_name = $output_path . basename($image_name);
-                            imagejpeg($new_image, $compressed_image_name, $image_quality);
-                            imagedestroy($new_image);
-                            echo $image_name ." Compressed Successfully"."<br>";
-                        }else {
-                                echo $image_name." Compressing Failed"."<br>";
-                        }
-                        break;
-                        
-                    case 'image/gif':
-                        $new_image = imagecreatefromgif($image_tmp_name);
-                        if($new_image !== false){
-                            $compressed_image_name = $output_path. 'converted_' . basename($image_name);
-                            imagejpeg($new_image, $compressed_image_name);
-                            imagedestroy($new_image);
-                            echo $image_name ." Compressed Successfully"."<br>";
-                        }else {
-                                echo $image_name." Compressing Failed"."<br>";
-                        }
-                        break;
-                    default:
-                        return false;
+    function dir_scan($dir){
+        $listdir=array_diff(scandir($dir), [".", ".."]);
+        print_r($listdir);
+        echo "<br>";
+        foreach($listdir as $subdir){
+            $file=$dir."\\".$subdir;
+            if(is_file($file)){
+                $parent_folder=basename(dirname($file));
+                $output_path="compressed/".$parent_folder;
+                if(is_dir($output_path)==false){
+                    mkdir($output_path);
+                }
+                $image_name =  $subdir;
+                echo "$image_name"."<br><br>";
+                $image_extenstion=strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                $extenstions_allowed = array('gif', 'png', 'jpg');
+                if(in_array($image_extenstion, $extenstions_allowed)){
+                    $mime_type = mime_content_type($file);
+                    switch(strtolower(($mime_type)))
+                    {
+                        case 'image/jpeg':
+                            $new_image = imagecreatefromjpeg($file);
+                            if($new_image !== false){
+                                $image_quality=60; 
+                                $compressed_image_name = $output_path."/". basename($image_name);
+                                imagejpeg($new_image, $compressed_image_name, $image_quality);
+                                imagedestroy($new_image);
+                                echo $image_name ." Compressed Successfully"."<br>";
+                            }else {
+                                    echo $image_name." Compressing Failed"."<br>";
+                            }
+                            break;
+
+                        case 'image/png':
+                            $image_quality=8;
+                            $new_image = imagecreatefrompng($file);
+                            if($new_image !== false){
+                                $compressed_image_name = $output_path."/". basename($image_name);
+                                imagejpeg($new_image, $compressed_image_name, $image_quality);
+                                imagedestroy($new_image);
+                                echo $image_name ." Compressed Successfully"."<br>";
+                            }else {
+                                    echo $image_name." Compressing Failed"."<br>";
+                            }
+                            break;
+                            
+                        case 'image/gif':
+                            $new_image = imagecreatefromgif($file);
+                            if($new_image !== false){
+                                $compressed_image_name = $output_path."/". basename($image_name);
+                                imagejpeg($new_image, $compressed_image_name);
+                                imagedestroy($new_image);
+                                echo $image_name ." Compressed Successfully"."<br>";
+                            }else {
+                                    echo $image_name." Compressing Failed"."<br>";
+                            }
+                            break;
+                        default:
+                            return false;
+                    }
                 }
             }
+            else if(is_dir($dir.$subdir)){
+                echo $dir.$subdir ."<br>";
+                dir_scan($dir.$subdir);
+            }
             else{
-                echo "Please Upload Image with extention .gif, .png, .jpg";
+                echo "erorr occoured<br>";
             }
         }
-    } 
+    }
 ?>
 
 <html lang="en">
